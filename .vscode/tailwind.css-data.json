@@ -1,0 +1,41 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@theme",
+      "description": "Tailwind CSS v4: defines design tokens (colors, fonts, spacing, etc.) that become utility classes."
+    },
+    {
+      "name": "@utility",
+      "description": "Tailwind CSS v4: defines a custom utility class."
+    },
+    {
+      "name": "@variant",
+      "description": "Tailwind CSS v4: defines a custom variant."
+    },
+    {
+      "name": "@source",
+      "description": "Tailwind CSS v4: explicitly adds a source path for content scanning."
+    },
+    {
+      "name": "@plugin",
+      "description": "Tailwind CSS v4: loads a Tailwind plugin."
+    },
+    {
+      "name": "@config",
+      "description": "Tailwind CSS v4: loads a legacy tailwind.config.js file."
+    },
+    {
+      "name": "@tailwind",
+      "description": "Tailwind CSS v3: injects Tailwind's base, components, or utilities styles."
+    },
+    {
+      "name": "@apply",
+      "description": "Tailwind CSS: applies utility classes inside a CSS rule."
+    },
+    {
+      "name": "@layer",
+      "description": "Tailwind CSS: registers custom styles in a specific layer (base, components, utilities)."
+    }
+  ]
+}

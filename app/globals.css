@@ -1,26 +1,251 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand */
+  --color-brand-primary: 199 89% 48%;
+  --color-brand-accent: 220 70% 60%;
+
+  /* Backgrounds */
+  --color-bg-base: 222 28% 7%;
+  --color-bg-surface: 220 25% 10%;
+  --color-bg-elevated: 220 22% 13%;
+  --color-bg-overlay: 220 20% 16%;
+
+  /* Borders */
+  --color-border-subtle: 220 18% 20%;
+  --color-border-default: 220 16% 25%;
+
+  /* Text */
+  --color-text-primary: 210 20% 96%;
+  --color-text-secondary: 215 15% 65%;
+  --color-text-muted: 215 12% 45%;
+
+  /* Status */
+  --color-normal: 152 69% 45%;
+  --color-mild: 43 95% 55%;
+  --color-high: 25 95% 55%;
+  --color-critical: 0 84% 55%;
+
+  /* Vitals */
+  --color-heart: 0 80% 60%;
+  --color-oxygen: 199 89% 55%;
+  --color-temp: 25 90% 55%;
+  --color-stress: 270 60% 60%;
+  --color-sleep: 220 70% 60%;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@theme {
+  --color-bg-base: hsl(222, 28%, 7%);
+  --color-bg-surface: hsl(220, 25%, 10%);
+  --color-bg-elevated: hsl(220, 22%, 13%);
+  --color-bg-overlay: hsl(220, 20%, 16%);
+
+  --color-border-subtle: hsl(220, 18%, 20%);
+  --color-border-default: hsl(220, 16%, 25%);
+
+  --color-text-primary: hsl(210, 20%, 96%);
+  --color-text-secondary: hsl(215, 15%, 65%);
+  --color-text-muted: hsl(215, 12%, 45%);
+
+  --color-brand: hsl(199, 89%, 48%);
+  --color-brand-accent: hsl(220, 70%, 60%);
+
+  --color-normal: hsl(152, 69%, 45%);
+  --color-mild: hsl(43, 95%, 55%);
+  --color-high: hsl(25, 95%, 55%);
+  --color-critical: hsl(0, 84%, 55%);
+
+  --color-heart: hsl(0, 80%, 60%);
+  --color-oxygen: hsl(199, 89%, 55%);
+  --color-temp: hsl(25, 90%, 55%);
+  --color-stress: hsl(270, 60%, 60%);
+  --color-sleep: hsl(220, 70%, 60%);
+
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
+  background-color: hsl(222, 28%, 7%);
+  color: hsl(210, 20%, 96%);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(220, 25%, 10%);
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(220, 18%, 28%);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(220, 18%, 38%);
+}
+
+/* Utility classes */
+.card {
+  background-color: hsl(220, 25%, 10%);
+  border: 1px solid hsl(220, 18%, 20%);
+  border-radius: 0.75rem;
+}
+
+.card-elevated {
+  background-color: hsl(220, 22%, 13%);
+  border: 1px solid hsl(220, 16%, 25%);
+  border-radius: 0.75rem;
+}
+
+.glow-heart {
+  box-shadow: 0 0 20px hsla(0, 80%, 60%, 0.15);
+}
+.glow-oxygen {
+  box-shadow: 0 0 20px hsla(199, 89%, 55%, 0.15);
+}
+.glow-temp {
+  box-shadow: 0 0 20px hsla(25, 90%, 55%, 0.15);
+}
+.glow-stress {
+  box-shadow: 0 0 20px hsla(270, 60%, 60%, 0.15);
+}
+
+.glow-critical {
+  box-shadow: 0 0 24px hsla(0, 84%, 55%, 0.3);
+}
+.glow-high {
+  box-shadow: 0 0 20px hsla(25, 95%, 55%, 0.2);
+}
+.glow-mild {
+  box-shadow: 0 0 18px hsla(43, 95%, 55%, 0.15);
+}
+
+/* Animated pulse for live indicators */
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.85);
+  }
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: hsl(152, 69%, 45%);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.15);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.08);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
+.icon-heartbeat {
+  animation: beat 1.2s ease-in-out infinite;
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+@keyframes fade-in-up {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.fade-in-up {
+  animation: fade-in-up 0.25s ease-out;
+}
+
+/* Chart tooltip overrides */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: hsl(220, 22%, 13%) !important;
+  border: 1px solid hsl(220, 16%, 25%) !important;
+  border-radius: 0.5rem !important;
+  color: hsl(210, 20%, 96%) !important;
+}
+
+.risk-normal {
+  color: hsl(152, 69%, 45%);
+}
+.risk-mild {
+  color: hsl(43, 95%, 55%);
+}
+.risk-high {
+  color: hsl(25, 95%, 55%);
+}
+.risk-critical {
+  color: hsl(0, 84%, 55%);
+}
+
+.bg-risk-normal {
+  background-color: hsla(152, 69%, 45%, 0.12);
+  border-color: hsla(152, 69%, 45%, 0.3);
+}
+.bg-risk-mild {
+  background-color: hsla(43, 95%, 55%, 0.12);
+  border-color: hsla(43, 95%, 55%, 0.3);
+}
+.bg-risk-high {
+  background-color: hsla(25, 95%, 55%, 0.12);
+  border-color: hsla(25, 95%, 55%, 0.3);
+}
+.bg-risk-critical {
+  background-color: hsla(0, 84%, 55%, 0.12);
+  border-color: hsla(0, 84%, 55%, 0.3);
 }
