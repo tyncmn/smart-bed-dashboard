@@ -17,7 +17,7 @@ export async function login(body: LoginRequest): Promise<TokenPair> {
     throw new Error(msg || `Login failed: ${res.status}`);
   }
 
-  return data as TokenPair;
+  return data as unknown as TokenPair;
 }
 
 export async function refreshTokens(body: RefreshRequest): Promise<TokenPair> {
