@@ -80,6 +80,11 @@ html {
 body {
   font-family: "Inter", system-ui, sans-serif;
   background-color: hsl(222, 28%, 7%);
+  background-image:
+    linear-gradient(hsl(220, 18%, 11%) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(220, 18%, 11%) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-attachment: fixed;
   color: hsl(210, 20%, 96%);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -104,15 +109,66 @@ body {
 
 /* Utility classes */
 .card {
-  background-color: hsl(220, 25%, 10%);
-  border: 1px solid hsl(220, 18%, 20%);
-  border-radius: 0.75rem;
+  background-color: hsl(220, 25%, 9%);
+  border: 1px solid hsl(220, 18%, 17%);
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
 .card-elevated {
-  background-color: hsl(220, 22%, 13%);
-  border: 1px solid hsl(220, 16%, 25%);
-  border-radius: 0.75rem;
+  background-color: hsl(220, 22%, 12%);
+  border: 1px solid hsl(220, 16%, 21%);
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Login-style page header blocks */
+.page-header {
+  padding-bottom: 20px;
+  border-bottom: 1px solid hsl(220, 18%, 16%);
+  margin-bottom: 24px;
+}
+
+/* Uppercase section divider label */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: hsl(215, 12%, 42%);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Live status pill */
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: hsla(152, 69%, 45%, 0.09);
+  border: 1px solid hsla(152, 69%, 45%, 0.22);
+  font-size: 10px;
+  font-weight: 700;
+  color: hsl(152, 69%, 52%);
+  letter-spacing: 0.07em;
+}
+
+/* Error pill */
+.error-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: hsla(0, 72%, 50%, 0.08);
+  border: 1px solid hsla(0, 72%, 50%, 0.22);
+  font-size: 10px;
+  font-weight: 700;
+  color: hsl(0, 72%, 65%);
+  letter-spacing: 0.06em;
 }
 
 .glow-heart {

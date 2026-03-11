@@ -28,28 +28,33 @@ export default function MonitoringPage() {
   }
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px' }}>
+    <div style={{ padding: '28px', maxWidth: '1200px' }}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="page-header flex items-start justify-between">
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'hsl(210,20%,96%)', marginBottom: '4px' }}>Live Monitoring</h1>
-          <p style={{ fontSize: '13px', color: 'hsl(215,15%,50%)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+            <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'hsl(210,20%,96%)', letterSpacing: '-0.02em' }}>Live Monitoring</h1>
+            <span className="live-pill"><span className="live-dot" style={{ width: '6px', height: '6px' }} />LIVE</span>
+          </div>
+          <p style={{ fontSize: '13px', color: 'hsl(215,15%,44%)' }}>
             Real-time alert feed updating every 5 seconds.
             {error && <span style={{ color: 'hsl(25,90%,55%)', marginLeft: '8px' }}>⚠ {error}</span>}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="live-dot" style={{ background: 'hsl(152,69%,45%)' }} />
-          <span style={{ fontSize: '12px', fontWeight: 600, color: 'hsl(152,69%,52%)' }}>LIVE</span>
-          {currentStatus && (
-            <div className="flex items-center gap-1.5 ml-3">
-              <Bell size={14} style={{ color: activeAlerts.length > 0 ? 'hsl(0,70%,58%)' : 'hsl(215,12%,40%)' }} />
-              <span style={{ fontSize: '13px', fontWeight: 700, color: activeAlerts.length > 0 ? 'hsl(0,70%,58%)' : 'hsl(152,69%,45%)', fontFamily: 'JetBrains Mono, monospace' }}>
-                {activeAlerts.length}
-              </span>
-            </div>
-          )}
-        </div>
+        {currentStatus && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            padding: '6px 12px', borderRadius: '10px',
+            background: activeAlerts.length > 0 ? 'hsla(0,70%,50%,0.08)' : 'hsla(152,69%,45%,0.08)',
+            border: `1px solid ${activeAlerts.length > 0 ? 'hsla(0,70%,50%,0.22)' : 'hsla(152,69%,45%,0.22)'}`,
+          }}>
+            <Bell size={14} style={{ color: activeAlerts.length > 0 ? 'hsl(0,70%,58%)' : 'hsl(152,69%,45%)' }} />
+            <span style={{ fontSize: '15px', fontWeight: 700, color: activeAlerts.length > 0 ? 'hsl(0,70%,58%)' : 'hsl(152,69%,45%)', fontFamily: 'JetBrains Mono, monospace' }}>
+              {activeAlerts.length}
+            </span>
+            <span style={{ fontSize: '11px', color: 'hsl(215,12%,45%)', marginLeft: '2px' }}>active</span>
+          </div>
+        )}
       </div>
 
       {/* Active Alerts */}
@@ -63,9 +68,9 @@ export default function MonitoringPage() {
             <div style={{ fontSize: '12px', color: 'hsl(215,12%,40%)', marginTop: '4px' }}>All metrics within normal range</div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             {activeAlerts.map(alert => (
-              <div key={alert.id} className="flex items-center gap-3">
+              <div key={alert.id} className="flex items-center gap-4">
                 <div className="flex-1">
                   <AlertBanner alert={alert} onClick={() => setSelectedAlert(alert.id)} />
                 </div>
@@ -91,7 +96,7 @@ export default function MonitoringPage() {
           <h2 style={{ fontSize: '13px', fontWeight: 700, color: 'hsl(215,15%,55%)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px' }}>
             Acknowledged ({acknowledgedAlerts.length})
           </h2>
-          <div className="flex flex-col gap-3" style={{ opacity: 0.65 }}>
+          <div className="flex flex-col gap-4" style={{ opacity: 0.65 }}>
             {acknowledgedAlerts.map(alert => (
               <AlertBanner key={alert.id} alert={alert} onClick={() => setSelectedAlert(alert.id)} />
             ))}

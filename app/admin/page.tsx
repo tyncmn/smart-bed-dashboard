@@ -15,12 +15,19 @@ export default function AdminPage() {
   };
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px' }}>
-      <div className="flex items-center gap-3 mb-6">
-        <Settings size={20} style={{ color: 'hsl(199,89%,55%)' }} />
+    <div style={{ padding: '28px', maxWidth: '1200px' }}>
+      <div className="page-header flex items-center gap-3">
+        <div style={{
+          width: '38px', height: '38px', borderRadius: '10px', flexShrink: 0,
+          background: 'hsla(199,89%,48%,0.12)',
+          border: '1px solid hsla(199,89%,48%,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Settings size={17} style={{ color: 'hsl(199,89%,55%)' }} />
+        </div>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'hsl(210,20%,96%)' }}>Admin Configuration</h1>
-          <p style={{ fontSize: '13px', color: 'hsl(215,15%,50%)' }}>Manage baseline ranges, alert thresholds, and notification rules.</p>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'hsl(210,20%,96%)', letterSpacing: '-0.02em' }}>Admin Configuration</h1>
+          <p style={{ fontSize: '13px', color: 'hsl(215,15%,44%)' }}>Manage baseline ranges, alert thresholds, and notification rules.</p>
         </div>
       </div>
 

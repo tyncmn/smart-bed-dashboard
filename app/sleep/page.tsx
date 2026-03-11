@@ -25,23 +25,23 @@ export default function SleepPage() {
   const summaries = sleep.nightly;
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px' }}>
-      <div className="flex items-center justify-between mb-6">
+    <div style={{ padding: '28px', maxWidth: '1200px' }}>
+      <div className="page-header flex items-start justify-between">
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'hsl(210,20%,96%)', marginBottom: '4px' }}>Sleep Analytics</h1>
-          <p style={{ fontSize: '13px', color: 'hsl(215,15%,50%)' }}>Nightly quality scores, stage distribution, and disturbance trends.</p>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'hsl(210,20%,96%)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Sleep Analytics</h1>
+          <p style={{ fontSize: '13px', color: 'hsl(215,15%,44%)' }}>Nightly quality scores, stage distribution, and disturbance trends.</p>
         </div>
         <div className="flex gap-2">
           {([7, 30] as const).map(d => (
             <button
               key={d}
               onClick={() => setDays(d)}
-              className="px-4 py-1.5 rounded-lg transition-all"
               style={{
-                fontSize: '12px', fontWeight: 600,
-                background: days === d ? 'hsl(220,22%,20%)' : 'transparent',
-                color: days === d ? 'hsl(215,15%,75%)' : 'hsl(215,12%,45%)',
-                border: `1px solid ${days === d ? 'hsl(220,16%,28%)' : 'hsl(220,16%,20%)'}`,
+                padding: '6px 16px', borderRadius: '8px', cursor: 'pointer',
+                fontSize: '12px', fontWeight: 700, transition: 'all 0.15s',
+                background: days === d ? 'hsla(199,89%,48%,0.15)' : 'transparent',
+                color: days === d ? 'hsl(199,89%,62%)' : 'hsl(215,12%,45%)',
+                border: `1px solid ${days === d ? 'hsla(199,89%,48%,0.35)' : 'hsl(220,16%,20%)'}`,
               }}
             >
               {d} Days
@@ -53,18 +53,19 @@ export default function SleepPage() {
       {/* KPI row */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
-          { label: `${days}-Day Avg Score`, value: `${Math.round(sleep.averageQualityScore)}`, suffix: '/100', color: scoreColor(sleep.averageQualityScore), icon: Moon },
-          { label: 'Avg Duration', value: sleep.averageDurationHours.toFixed(1), suffix: 'h/night', color: 'hsl(199,70%,55%)', icon: BarChart3 },
-          { label: 'Disturbed Nights', value: `${sleep.disturbedNights}`, suffix: `/${sleep.totalNights} days`, color: sleep.disturbedNights > 2 ? 'hsl(25,90%,55%)' : 'hsl(152,69%,45%)', icon: AlertTriangle },
-          { label: 'Trend', value: summaries.length >= 2 ? (summaries[summaries.length - 1].qualityScore > summaries[0].qualityScore ? '↑' : '↓') : '—', suffix: 'vs first night', color: 'hsl(199,70%,55%)', icon: TrendingUp },
-        ].map(({ label, value, suffix, color, icon: Icon }) => (
-          <div key={label} className="card p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Icon size={14} style={{ color: 'hsl(215,12%,40%)' }} />
-              <span style={{ fontSize: '11px', color: 'hsl(215,12%,40%)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
+          { label: `${days}-Day Avg Score`, value: `${Math.round(sleep.averageQualityScore)}`, suffix: '/ 100', color: scoreColor(sleep.averageQualityScore), border: scoreColor(sleep.averageQualityScore), icon: Moon },
+          { label: 'Avg Duration', value: sleep.averageDurationHours.toFixed(1), suffix: 'h / night', color: 'hsl(199,70%,55%)', border: 'hsl(199,70%,55%)', icon: BarChart3 },
+          { label: 'Disturbed Nights', value: `${sleep.disturbedNights}`, suffix: `of ${sleep.totalNights}`, color: sleep.disturbedNights > 2 ? 'hsl(25,90%,55%)' : 'hsl(152,69%,45%)', border: sleep.disturbedNights > 2 ? 'hsl(25,90%,55%)' : 'hsl(152,69%,45%)', icon: AlertTriangle },
+          { label: 'Quality Trend', value: summaries.length >= 2 ? (summaries[summaries.length - 1].qualityScore > summaries[0].qualityScore ? '↑' : '↓') : '—', suffix: 'vs first night', color: summaries.length >= 2 ? (summaries[summaries.length - 1].qualityScore > summaries[0].qualityScore ? 'hsl(152,69%,48%)' : 'hsl(0,70%,58%)') : 'hsl(215,12%,50%)', border: 'hsl(199,70%,55%)', icon: TrendingUp },
+        ].map(({ label, value, suffix, color, border, icon: Icon }) => (
+          <div key={label} className="card" style={{ padding: '16px 18px', borderLeft: `3px solid ${border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '10px' }}>
+              <Icon size={12} style={{ color: 'hsl(215,12%,42%)', flexShrink: 0 }} />
+              <span style={{ fontSize: '11px', color: 'hsl(215,12%,42%)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{label}</span>
             </div>
-            <div style={{ fontSize: '32px', fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', color }}>
-              {value} <span style={{ fontSize: '14px', fontWeight: 400, color: 'hsl(215,15%,50%)' }}>{suffix}</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px' }}>
+              <span style={{ fontSize: '26px', fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', color, lineHeight: 1 }}>{value}</span>
+              {suffix && <span style={{ fontSize: '12px', fontWeight: 400, color: 'hsl(215,15%,42%)' }}>{suffix}</span>}
             </div>
           </div>
         ))}

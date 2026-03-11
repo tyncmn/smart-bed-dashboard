@@ -20,13 +20,13 @@ export function AlertBanner({ alert, onDismiss, onClick }: AlertBannerProps) {
 
   return (
     <div
-      className="relative flex items-start gap-3 rounded-xl border cursor-pointer hover:brightness-110 transition-all duration-150 fade-in-up"
+      className="relative flex items-start gap-4 rounded-xl border cursor-pointer hover:brightness-110 transition-all duration-150 fade-in-up"
       onClick={onClick}
       style={{
         background: `linear-gradient(135deg, hsla(220,22%,11%,0.95), hsla(220,22%,9%,0.95))`,
         borderColor: accentColor + '40',
-        padding: '14px 16px',
-        boxShadow: alert.riskLevel === 'critical' ? `0 0 20px ${accentColor}20` : 'none',
+        padding: '18px 20px',
+        boxShadow: alert.riskLevel === 'critical' ? `0 0 24px ${accentColor}25` : 'none',
       }}
     >
       <div style={{
@@ -34,13 +34,13 @@ export function AlertBanner({ alert, onDismiss, onClick }: AlertBannerProps) {
         background: accentColor, borderRadius: '12px 0 0 12px',
       }} />
 
-      <div style={{ color: accentColor, marginTop: '1px', flexShrink: 0 }}>
-        <Icon size={18} />
+      <div style={{ color: accentColor, marginTop: '2px', flexShrink: 0 }}>
+        <Icon size={20} />
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1 flex-wrap">
-          <span style={{ fontWeight: 600, fontSize: '13px', color: 'hsl(210,20%,94%)' }}>
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <span style={{ fontWeight: 600, fontSize: '14px', color: 'hsl(210,20%,94%)' }}>
             {alert.title}
           </span>
           <RiskBadge level={alert.riskLevel} size="sm" showIcon={false} />
@@ -49,22 +49,22 @@ export function AlertBanner({ alert, onDismiss, onClick }: AlertBannerProps) {
           </span>
         </div>
 
-        <p style={{ color: 'hsl(215,15%,60%)', fontSize: '12px', lineHeight: 1.5 }}>
+        <p style={{ color: 'hsl(215,15%,60%)', fontSize: '13px', lineHeight: 1.6 }}>
           {alert.description}
         </p>
 
-        <div className="flex items-center gap-3 mt-2 flex-wrap">
-          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: accentColor, fontWeight: 600 }}>
+        <div className="flex items-center gap-3 mt-3 flex-wrap">
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '12px', color: accentColor, fontWeight: 600 }}>
             {alert.metric}: {alert.currentValue}
           </span>
-          <span style={{ color: 'hsl(215,12%,38%)', fontSize: '11px' }}>
+          <span style={{ color: 'hsl(215,12%,42%)', fontSize: '12px' }}>
             Expected: {alert.expectedMin}–{alert.expectedMax}
           </span>
-          <span style={{ color: 'hsl(215,12%,38%)', fontSize: '11px' }}>
+          <span style={{ color: 'hsl(215,12%,42%)', fontSize: '12px' }}>
             Risk: {alert.riskPercentage.toFixed(1)}%
           </span>
           <span style={{
-            fontSize: '11px', fontWeight: 600,
+            fontSize: '12px', fontWeight: 600,
             color: status === 'active' ? 'hsl(0,70%,60%)' : 'hsl(152,65%,45%)',
           }}>
             ● {status.toUpperCase()}

@@ -3,13 +3,74 @@ import { Alert, CurrentStatusResponse, NightlySummary, RiskLevel, SleepSummary }
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://46.101.184.103:8080';
 const API_PREFIX = `${API_BASE}/api/v1`;
 
-import { getAccessToken } from './auth';
+import { getAccessToken, getRefreshToken, removeTokens, setTokens } from './auth';
 
-function getHeaders(): HeadersInit {
+function getHeaders(accessToken?: string): HeadersInit {
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  const token = getAccessToken() || process.env.NEXT_PUBLIC_API_TOKEN;
+  const token = accessToken ?? getAccessToken() ?? process.env.NEXT_PUBLIC_API_TOKEN;
   if (token) headers['Authorization'] = `Bearer ${token}`;
   return headers;
+}
+
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) return null;
+
+    try {
+      const res = await fetch(`${API_PREFIX}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      const nextAccess = String(data.access_token ?? '');
+      const nextRefresh = String(data.refresh_token ?? refreshToken);
+      if (!nextAccess) return null;
+
+      setTokens(nextAccess, nextRefresh);
+      return nextAccess;
+    } catch {
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
+async function apiFetch(path: string, init: RequestInit = {}, skipAuthRetry = false): Promise<Response> {
+  const first = await fetch(`${API_PREFIX}${path}`, {
+    ...init,
+    headers: {
+      ...getHeaders(),
+      ...(init.headers ?? {}),
+    },
+  });
+
+  if (first.status !== 401 || skipAuthRetry) return first;
+
+  const nextAccess = await refreshAccessToken();
+  if (!nextAccess) {
+    removeTokens();
+    return first;
+  }
+
+  return fetch(`${API_PREFIX}${path}`, {
+    ...init,
+    headers: {
+      ...getHeaders(nextAccess),
+      ...(init.headers ?? {}),
+    },
+  });
 }
 
 // ──── Mappers (snake_case API → camelCase frontend) ────
@@ -60,10 +121,7 @@ function mapSleepSummary(raw: Record<string, unknown>): SleepSummary {
 // ──── API Calls ────
 
 export async function fetchCurrentStatus(userId: string): Promise<CurrentStatusResponse> {
-  const res = await fetch(
-    `${API_PREFIX}/users/${encodeURIComponent(userId)}/current-status`,
-    { headers: getHeaders() }
-  );
+  const res = await apiFetch(`/users/${encodeURIComponent(userId)}/current-status`);
   if (!res.ok) throw new Error(`Failed to fetch status: ${res.status}`);
   const data = await res.json();
   return {
@@ -74,19 +132,91 @@ export async function fetchCurrentStatus(userId: string): Promise<CurrentStatusR
 }
 
 export async function fetchSleepSummary(userId: string, days: 7 | 30 = 7): Promise<SleepSummary> {
-  const res = await fetch(
-    `${API_PREFIX}/users/${encodeURIComponent(userId)}/sleep-summary?days=${days}`,
-    { headers: getHeaders() }
-  );
+  const res = await apiFetch(`/users/${encodeURIComponent(userId)}/sleep-summary?days=${days}`);
   if (!res.ok) throw new Error(`Failed to fetch sleep summary: ${res.status}`);
   const data = await res.json();
   return mapSleepSummary(data);
 }
 
 export async function acknowledgeAlertApi(alertId: string): Promise<void> {
-  const res = await fetch(
-    `${API_PREFIX}/alerts/${encodeURIComponent(alertId)}/acknowledge`,
-    { method: 'PATCH', headers: getHeaders() }
-  );
+  const res = await apiFetch(`/alerts/${encodeURIComponent(alertId)}/acknowledge`, {
+    method: 'PATCH',
+  });
   if (!res.ok) throw new Error(`Failed to acknowledge alert: ${res.status}`);
+}
+
+export type VitalsMetricKey =
+  | 'heart_rate'
+  | 'spo2'
+  | 'stress_level'
+  | 'skin_temperature'
+  | 'movement_score'
+  | 'sleep_duration';
+
+export interface VitalsMetricPoint {
+  value: number;
+  recordedAt: string;
+}
+
+export interface LatestVitalsResponse {
+  userId: string;
+  fetchedAt: string;
+  metrics: Record<VitalsMetricKey, VitalsMetricPoint>;
+}
+
+export async function fetchLatestVitals(userId: string): Promise<LatestVitalsResponse> {
+  const res = await apiFetch(`/vitals/latest?user_id=${encodeURIComponent(userId)}`);
+  if (!res.ok) throw new Error(`Failed to fetch latest vitals: ${res.status}`);
+
+  const data = await res.json();
+  const rawMetrics = (data.metrics ?? {}) as Record<string, { value?: unknown; recorded_at?: unknown }>;
+
+  const mapMetric = (key: VitalsMetricKey): VitalsMetricPoint => ({
+    value: Number(rawMetrics[key]?.value ?? 0),
+    recordedAt: String(rawMetrics[key]?.recorded_at ?? data.fetched_at ?? new Date().toISOString()),
+  });
+
+  return {
+    userId: String(data.user_id ?? userId),
+    fetchedAt: String(data.fetched_at ?? new Date().toISOString()),
+    metrics: {
+      heart_rate: mapMetric('heart_rate'),
+      spo2: mapMetric('spo2'),
+      stress_level: mapMetric('stress_level'),
+      skin_temperature: mapMetric('skin_temperature'),
+      movement_score: mapMetric('movement_score'),
+      sleep_duration: mapMetric('sleep_duration'),
+    },
+  };
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+  userId: string;
+  role: string;
+  email: string;
+  isActive: boolean;
+}
+
+export async function loginApi(email: string, password: string): Promise<LoginResponse> {
+  const res = await fetch(`${API_PREFIX}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.message || data?.error || `Login failed: ${res.status}`);
+  }
+  return {
+    accessToken: String(data.access_token ?? ''),
+    refreshToken: String(data.refresh_token ?? ''),
+    expiresAt: String(data.expires_at ?? ''),
+    userId: String(data.user_id ?? data.user?.id ?? ''),
+    role: String(data.role ?? data.user?.role ?? 'operator'),
+    email: String(data.user?.email ?? email),
+    isActive: Boolean(data.user?.is_active ?? true),
+  };
 }
