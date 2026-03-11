@@ -1,7 +1,8 @@
 import { Alert, CurrentStatusResponse, NightlySummary, RiskLevel, SleepSummary } from './types';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://46.101.184.103:8080';
-const API_PREFIX = `${API_BASE}/api/v1`;
+// Use relative path so all requests go through the Next.js rewrite proxy.
+// This avoids mixed-content (HTTP/HTTPS) errors when deployed on Vercel.
+const API_PREFIX = '/api/v1';
 
 import { getAccessToken, getRefreshToken, removeTokens, setTokens } from './auth';
 

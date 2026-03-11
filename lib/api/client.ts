@@ -5,8 +5,9 @@
 import { getAccessToken, getRefreshToken, setTokens, removeTokens } from '@/lib/auth';
 import type { TokenPair } from '@/types/auth';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://46.101.184.103:8080';
-export const API_PREFIX = `${API_BASE}/api/v1`;
+// Relative path — requests are proxied by Next.js rewrites to the real backend.
+// This avoids mixed-content errors on Vercel (HTTPS → HTTP).
+export const API_PREFIX = '/api/v1';
 
 // ── JWT expiry check ──────────────────────────────────────────
 
