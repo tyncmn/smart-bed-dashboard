@@ -1,93 +1,59 @@
 'use client';
+
 import { create } from 'zustand';
-import { Alert, VitalWithRisk, Device, DeviceStatus } from './types';
-import { MOCK_ALERTS, MOCK_DEVICES, buildCurrentStatus, generateVitalsForPatient, MOCK_PATIENTS } from './mock-data';
+import { CurrentStatusResponse, SleepSummary } from './types';
 
 interface DashboardState {
-  // Active patient
-  activePatientId: string;
-  scenario: 'normal' | 'mild' | 'high' | 'critical';
-  setActivePatient: (id: string) => void;
-  setScenario: (s: 'normal' | 'mild' | 'high' | 'critical') => void;
+  currentStatus: CurrentStatusResponse | null;
+  sleepSummary: SleepSummary | null;
+  isLoading: boolean;
+  error: string | null;
+  lastFetched: string | null;
 
-  // Live vitals
-  currentVitals: VitalWithRisk | null;
-  vitalHistory: Record<string, { timestamp: string; value: number; riskLevel: string }[]>;
-  updateVitals: (vitals: VitalWithRisk) => void;
+  setCurrentStatus: (status: CurrentStatusResponse) => void;
+  setSleepSummary: (summary: SleepSummary) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  optimisticAcknowledge: (alertId: string) => void;
 
-  // Alerts
-  alerts: Alert[];
-  acknowledgeAlert: (alertId: string, by: string) => void;
-  escalateAlert: (alertId: string, to: string, by: string) => void;
-  assignAlert: (alertId: string, to: string) => void;
-
-  // Devices
-  devices: Device[];
-  updateDeviceStatus: (deviceId: string, status: DeviceStatus) => void;
-
-  // UI state
   selectedAlertId: string | null;
   setSelectedAlert: (id: string | null) => void;
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
 }
 
-export const useDashboardStore = create<DashboardState>((set, get) => ({
-  activePatientId: 'p-001',
-  scenario: 'mild',
-  setActivePatient: (id) => set({ activePatientId: id }),
-  setScenario: (scenario) => set({ scenario }),
+export const useDashboardStore = create<DashboardState>((set) => ({
+  currentStatus: null,
+  sleepSummary: null,
+  isLoading: true,
+  error: null,
+  lastFetched: null,
 
-  currentVitals: null,
-  vitalHistory: { heartRate: [], spo2: [], temperature: [], stress: [] },
-  updateVitals: (vitals) => {
+  setCurrentStatus: (currentStatus) =>
+    set({ currentStatus, lastFetched: new Date().toISOString(), isLoading: false, error: null }),
+
+  setSleepSummary: (sleepSummary) => set({ sleepSummary }),
+  setLoading: (isLoading) => set({ isLoading }),
+  setError: (error) => set({ error, isLoading: false }),
+
+  optimisticAcknowledge: (alertId) =>
     set((state) => {
-      const maxLen = 120;
-      const push = (arr: { timestamp: string; value: number; riskLevel: string }[], val: number, risk: string) => {
-        const next = [...arr, { timestamp: vitals.timestamp, value: val, riskLevel: risk }];
-        return next.slice(-maxLen);
-      };
+      if (!state.currentStatus) return state;
       return {
-        currentVitals: vitals,
-        vitalHistory: {
-          heartRate: push(state.vitalHistory.heartRate, vitals.heartRate, vitals.heartRateRisk.riskLevel),
-          spo2: push(state.vitalHistory.spo2, vitals.spo2, vitals.spo2Risk.riskLevel),
-          temperature: push(state.vitalHistory.temperature, vitals.skinTemperature, vitals.temperatureRisk.riskLevel),
-          stress: push(state.vitalHistory.stress, vitals.stressLevel, vitals.stressRisk.riskLevel),
+        currentStatus: {
+          ...state.currentStatus,
+          unreadAlertCount: Math.max(0, state.currentStatus.unreadAlertCount - 1),
+          alerts: state.currentStatus.alerts.map((a) =>
+            a.id === alertId
+              ? { ...a, isAcknowledged: true, acknowledgedAt: new Date().toISOString() }
+              : a
+          ),
         },
       };
-    });
-  },
-
-  alerts: MOCK_ALERTS,
-  acknowledgeAlert: (alertId, by) => set(state => ({
-    alerts: state.alerts.map(a => a.id === alertId ? {
-      ...a, status: 'acknowledged' as const,
-      acknowledgedAt: new Date().toISOString(), acknowledgedBy: by,
-      escalationHistory: [...a.escalationHistory, { timestamp: new Date().toISOString(), action: 'acknowledged' as const, performedBy: by }]
-    } : a)
-  })),
-  escalateAlert: (alertId, to, by) => set(state => ({
-    alerts: state.alerts.map(a => a.id === alertId ? {
-      ...a, status: 'escalated' as const,
-      escalatedAt: new Date().toISOString(), escalatedTo: to,
-      escalationHistory: [...a.escalationHistory, { timestamp: new Date().toISOString(), action: 'escalated' as const, performedBy: by, note: `Escalated to ${to}` }]
-    } : a)
-  })),
-  assignAlert: (alertId, to) => set(state => ({
-    alerts: state.alerts.map(a => a.id === alertId ? {
-      ...a, assignedTo: to,
-      escalationHistory: [...a.escalationHistory, { timestamp: new Date().toISOString(), action: 'assigned' as const, performedBy: 'System', note: `Assigned to ${to}` }]
-    } : a)
-  })),
-
-  devices: MOCK_DEVICES,
-  updateDeviceStatus: (deviceId, status) => set(state => ({
-    devices: state.devices.map(d => d.id === deviceId ? { ...d, status } : d)
-  })),
+    }),
 
   selectedAlertId: null,
   setSelectedAlert: (id) => set({ selectedAlertId: id }),
   isSidebarOpen: true,
-  toggleSidebar: () => set(state => ({ isSidebarOpen: !state.isSidebarOpen })),
+  toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
 }));

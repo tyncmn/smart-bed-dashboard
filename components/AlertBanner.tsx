@@ -16,6 +16,7 @@ export function AlertBanner({ alert, onDismiss, onClick }: AlertBannerProps) {
   const Icon = alert.riskLevel === 'critical' ? AlertOctagon
     : alert.riskLevel === 'high' ? AlertTriangle : Info;
   const accentColor = riskColor(alert.riskLevel);
+  const status = alert.isAcknowledged ? 'acknowledged' : 'active';
 
   return (
     <div
@@ -28,7 +29,6 @@ export function AlertBanner({ alert, onDismiss, onClick }: AlertBannerProps) {
         boxShadow: alert.riskLevel === 'critical' ? `0 0 20px ${accentColor}20` : 'none',
       }}
     >
-      {/* Left stripe */}
       <div style={{
         position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px',
         background: accentColor, borderRadius: '12px 0 0 12px',
@@ -65,9 +65,9 @@ export function AlertBanner({ alert, onDismiss, onClick }: AlertBannerProps) {
           </span>
           <span style={{
             fontSize: '11px', fontWeight: 600,
-            color: alert.status === 'active' ? 'hsl(0,70%,60%)' : alert.status === 'escalated' ? 'hsl(25,90%,60%)' : 'hsl(43,80%,55%)',
+            color: status === 'active' ? 'hsl(0,70%,60%)' : 'hsl(152,65%,45%)',
           }}>
-            ● {alert.status.toUpperCase()}
+            ● {status.toUpperCase()}
           </span>
         </div>
       </div>

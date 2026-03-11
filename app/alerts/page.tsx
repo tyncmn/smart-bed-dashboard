@@ -2,24 +2,30 @@
 
 import React, { useState } from 'react';
 import { useDashboardStore } from '@/lib/store';
+import { useRealtimeStatus } from '@/lib/use-realtime';
 import { AlertDetailDrawer } from '@/components/AlertDetailDrawer';
 import { RiskBadge } from '@/components/RiskBadge';
-import { riskColor, timeAgo, formatDateTime } from '@/lib/utils';
-import { MOCK_PATIENTS } from '@/lib/mock-data';
-import { Alert, RiskLevel, AlertStatus } from '@/lib/types';
+import { riskColor, timeAgo } from '@/lib/utils';
+import { RiskLevel } from '@/lib/types';
+import { acknowledgeAlertApi } from '@/lib/api';
 import { AlertOctagon, AlertTriangle, Info, Filter, CheckCircle } from 'lucide-react';
 
 type FilterRisk = 'all' | RiskLevel;
-type FilterStatus = 'all' | AlertStatus;
+type FilterStatus = 'all' | 'active' | 'acknowledged';
 
 export default function AlertsPage() {
-  const { alerts, acknowledgeAlert, setSelectedAlert, selectedAlertId } = useDashboardStore();
+  useRealtimeStatus(5000);
+  const { currentStatus, optimisticAcknowledge, setSelectedAlert, selectedAlertId } = useDashboardStore();
   const [riskFilter, setRiskFilter] = useState<FilterRisk>('all');
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
 
+  const alerts = currentStatus?.alerts ?? [];
+
   const filtered = alerts.filter(a => {
     const riskOk = riskFilter === 'all' || a.riskLevel === riskFilter;
-    const statusOk = statusFilter === 'all' || a.status === statusFilter;
+    const statusOk = statusFilter === 'all'
+      || (statusFilter === 'active' && !a.isAcknowledged)
+      || (statusFilter === 'acknowledged' && a.isAcknowledged);
     return riskOk && statusOk;
   });
 
@@ -29,24 +35,22 @@ export default function AlertsPage() {
     critical: alerts.filter(a => a.riskLevel === 'critical').length,
     high: alerts.filter(a => a.riskLevel === 'high').length,
     mild: alerts.filter(a => a.riskLevel === 'mild').length,
-    active: alerts.filter(a => a.status === 'active').length,
-    escalated: alerts.filter(a => a.status === 'escalated').length,
-    acknowledged: alerts.filter(a => a.status === 'acknowledged').length,
+    active: alerts.filter(a => !a.isAcknowledged).length,
+    acknowledged: alerts.filter(a => a.isAcknowledged).length,
   };
 
   return (
     <div style={{ padding: '24px', maxWidth: '1200px' }}>
       <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'hsl(210,20%,96%)', marginBottom: '4px' }}>Alert Center</h1>
-      <p style={{ fontSize: '13px', color: 'hsl(215,15%,50%)', marginBottom: '24px' }}>Manage active alerts, review escalations, and acknowledge events.</p>
+      <p style={{ fontSize: '13px', color: 'hsl(215,15%,50%)', marginBottom: '24px' }}>Manage active alerts and acknowledge events.</p>
 
       {/* Summary tiles */}
-      <div className="grid grid-cols-6 gap-3 mb-6">
+      <div className="grid grid-cols-5 gap-3 mb-6">
         {[
           { label: 'Critical', count: counts.critical, color: 'hsl(0,80%,55%)' },
           { label: 'High', count: counts.high, color: 'hsl(25,90%,55%)' },
           { label: 'Mild', count: counts.mild, color: 'hsl(43,90%,55%)' },
           { label: 'Active', count: counts.active, color: 'hsl(0,70%,55%)' },
-          { label: 'Escalated', count: counts.escalated, color: 'hsl(25,85%,55%)' },
           { label: 'Acknowledged', count: counts.acknowledged, color: 'hsl(152,65%,45%)' },
         ].map(({ label, count, color }) => (
           <div key={label} className="card-elevated text-center" style={{ padding: '14px 8px' }}>
@@ -79,7 +83,7 @@ export default function AlertsPage() {
         <div className="flex items-center gap-1 ml-4" style={{ color: 'hsl(215,12%,45%)', fontSize: '12px' }}>
           Status:
         </div>
-        {(['all', 'active', 'acknowledged', 'escalated', 'resolved'] as FilterStatus[]).map(f => (
+        {(['all', 'active', 'acknowledged'] as FilterStatus[]).map(f => (
           <button
             key={f}
             onClick={() => setStatusFilter(f)}
@@ -112,8 +116,8 @@ export default function AlertsPage() {
           )}
           {filtered.map((alert, i) => {
             const accentColor = riskColor(alert.riskLevel);
-            const patient = MOCK_PATIENTS.find(p => p.id === alert.patientId);
             const Icon = alert.riskLevel === 'critical' ? AlertOctagon : alert.riskLevel === 'high' ? AlertTriangle : Info;
+            const status = alert.isAcknowledged ? 'acknowledged' : 'active';
             return (
               <div
                 key={alert.id}
@@ -130,7 +134,7 @@ export default function AlertsPage() {
 
                 <div style={{ flex: '0 0 200px' }}>
                   <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(210,20%,92%)' }}>{alert.title}</div>
-                  <div style={{ fontSize: '11px', color: 'hsl(215,12%,45%)' }}>{patient?.name} · Room {patient?.roomNumber}</div>
+                  <div style={{ fontSize: '11px', color: 'hsl(215,12%,45%)' }}>{alert.type}</div>
                 </div>
 
                 <div style={{ flex: '0 0 120px' }}>
@@ -147,9 +151,9 @@ export default function AlertsPage() {
                 <div style={{ flex: '0 0 80px' }}>
                   <span style={{
                     fontSize: '11px', fontWeight: 700,
-                    color: alert.status === 'active' ? 'hsl(0,70%,60%)' : alert.status === 'escalated' ? 'hsl(25,85%,58%)' : 'hsl(152,65%,45%)',
+                    color: status === 'active' ? 'hsl(0,70%,60%)' : 'hsl(152,65%,45%)',
                   }}>
-                    {alert.status.toUpperCase()}
+                    {status.toUpperCase()}
                   </span>
                 </div>
 
@@ -157,9 +161,13 @@ export default function AlertsPage() {
                   {timeAgo(alert.createdAt)}
                 </div>
 
-                {alert.status === 'active' && (
+                {!alert.isAcknowledged && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); acknowledgeAlert(alert.id, 'Current User'); }}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      optimisticAcknowledge(alert.id);
+                      await acknowledgeAlertApi(alert.id);
+                    }}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all hover:brightness-110"
                     style={{ background: 'hsla(152,69%,45%,0.12)', border: '1px solid hsla(152,69%,45%,0.3)', color: 'hsl(152,69%,52%)', fontSize: '11px', fontWeight: 600, flexShrink: 0 }}
                   >
