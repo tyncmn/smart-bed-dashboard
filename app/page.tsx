@@ -8,7 +8,7 @@ import { AlertDetailDrawer } from '@/components/AlertDetailDrawer';
 import { timeAgo } from '@/lib/utils';
 import { Activity, AlertTriangle, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { fetchLatestVitals, LatestVitalsResponse, VitalsMetricKey } from '@/lib/api';
+import { fetchLatestVitals, VitalsMetricKey } from '@/lib/api';
 import { getUserId } from '@/lib/auth';
 import {
   CartesianGrid,
@@ -19,17 +19,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-
-type HistoryPoint = {
-  fetchedAt: string;
-  timeLabel: string;
-  heart_rate: number;
-  spo2: number;
-  stress_level: number;
-  skin_temperature: number;
-  movement_score: number;
-  sleep_duration: number;
-};
 
 const METRIC_CONFIG: Array<{
   key: VitalsMetricKey;
@@ -48,11 +37,10 @@ const METRIC_CONFIG: Array<{
 
 export default function OverviewPage() {
   useRealtimeStatus(5000);
-  const { currentStatus, selectedAlertId, setSelectedAlert } = useDashboardStore();
-  const [vitals, setVitals] = useState<LatestVitalsResponse | null>(null);
-  const [history, setHistory] = useState<HistoryPoint[]>([]);
+  const { currentStatus, selectedAlertId, setSelectedAlert, vitals, vitalsHistory, setVitals } = useDashboardStore();
   const [vitalsError, setVitalsError] = useState<string | null>(null);
-  const [isVitalsLoading, setIsVitalsLoading] = useState(true);
+  // Only show loading spinner on the very first load (no cached data yet)
+  const [isVitalsLoading, setIsVitalsLoading] = useState(vitals === null);
 
   const activeAlerts = currentStatus?.alerts.filter(a => !a.isAcknowledged) ?? [];
   const selectedAlert = selectedAlertId ? currentStatus?.alerts.find(a => a.id === selectedAlertId) : null;
@@ -74,29 +62,9 @@ export default function OverviewPage() {
         const latest = await fetchLatestVitals(userId);
         if (!mounted) return;
 
-        setVitals(latest);
+        setVitals(latest);  // stored in Zustand — survives navigation
         setVitalsError(null);
         setIsVitalsLoading(false);
-        setHistory((prev) => {
-          if (prev[prev.length - 1]?.fetchedAt === latest.fetchedAt) return prev;
-
-          const point: HistoryPoint = {
-            fetchedAt: latest.fetchedAt,
-            timeLabel: new Date(latest.fetchedAt).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-            }),
-            heart_rate: latest.metrics.heart_rate.value,
-            spo2: latest.metrics.spo2.value,
-            stress_level: latest.metrics.stress_level.value,
-            skin_temperature: latest.metrics.skin_temperature.value,
-            movement_score: latest.metrics.movement_score.value,
-            sleep_duration: latest.metrics.sleep_duration.value,
-          };
-
-          return [...prev, point].slice(-36);
-        });
       } catch (err) {
         if (!mounted) return;
         setIsVitalsLoading(false);
@@ -113,7 +81,7 @@ export default function OverviewPage() {
     };
   }, []);
 
-  const hasHistory = history.length > 0;
+  const hasHistory = vitalsHistory.length > 0;
 
   const latestMetricCards = useMemo(() => {
     if (!vitals) return [];
@@ -195,7 +163,7 @@ export default function OverviewPage() {
             </div>
             <div style={{ width: '100%', height: '180px' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={history} margin={{ left: -18, right: 6, top: 8, bottom: 0 }}>
+                <LineChart data={vitalsHistory} margin={{ left: -18, right: 6, top: 8, bottom: 0 }}>
                   <CartesianGrid stroke="hsl(220,18%,16%)" strokeDasharray="3 3" />
                   <XAxis dataKey="timeLabel" tick={{ fill: 'hsl(215,12%,45%)', fontSize: 10 }} axisLine={false} tickLine={false} minTickGap={24} />
                   <YAxis tick={{ fill: 'hsl(215,12%,45%)', fontSize: 10 }} axisLine={false} tickLine={false} width={30} />
